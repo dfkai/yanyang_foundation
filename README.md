@@ -98,8 +98,20 @@ gh repo create yanyang-foundation --private --source=. --remote=origin --push
 ### 2. 接入 Vercel
 
 1. 登录 <https://vercel.com>，New Project → Import Git Repository
-2. 选中刚创建的仓库，框架会自动识别为 Next.js，**不需要改任何构建配置**
-3. 首次部署前把构建命令临时改为 `pnpm build:preview`（内容未齐时 `pnpm build` 会主动失败），内容填完后改回 `pnpm build`
+2. 选中刚创建的仓库，框架会自动识别为 Next.js，**不需要在网页上改任何构建配置**
+
+构建配置写在仓库里的 [`vercel.json`](vercel.json)，不放在 Vercel 网页设置里 —— 网页上那个 Override 开关忘记打开是最常见的部署失败原因，而且换台机器、重建项目就得重配一次。
+
+这个文件目前是**预览模式**的开关，两项内容一体：
+
+| 字段 | 作用 |
+|---|---|
+| `buildCommand: pnpm build:preview` | 跳过占位守卫，内容未齐也能构建出站点 |
+| `NEXT_PUBLIC_DEMO: "1"` | 渲染 `content/demo-pages.ts` 的示意内容，让版式可被评估 |
+
+**内容齐备、准备正式上线时，直接删掉 `vercel.json` 整个文件**，一步切回生产模式：构建走带占位守卫的 `pnpm build`，示意内容不再渲染。两个开关绑在一起是刻意的 —— 避免出现「守卫关了但演示数据还在」这类半吊子状态上线。
+
+> 预览部署期间务必在 Settings → Deployment Protection 开启密码保护。示意内容里有「91××××××」这类形似统一社会信用代码的占位值，慈善机构官网被搜索引擎收录到这些内容，解释成本很高。
 
 ### 3. 绑定域名
 

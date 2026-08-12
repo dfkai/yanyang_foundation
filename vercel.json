@@ -1,0 +1,8 @@
+{
+  "buildCommand": "pnpm build:preview",
+  "build": {
+    "env": {
+      "NEXT_PUBLIC_DEMO": "1"
+    }
+  }
+}

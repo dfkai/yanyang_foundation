@@ -39,3 +39,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# 字体源文件（18MB，由 scripts/subset-fonts.mjs 按需下载）
+/assets/fonts/*.ttf
+
+# 本地验证截图
+/.screenshots

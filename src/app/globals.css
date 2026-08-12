@@ -1,1 +1,1047 @@
 @import "tailwindcss";
+@import "./effects.css";
+
+/* ===========================================================================
+   艳阳基金会 · 设计系统
+   ---------------------------------------------------------------------------
+   视觉方向：暖阳浅底 —— 浅色为主，琥珀橙作品牌色，玻璃只出现在导航层。
+   色板经 OKLCH 生成并逐项实算 WCAG 对比度，未达标的组合已被剔除
+   （详见 docs/RESEARCH.md「色板验收」）。
+   =========================================================================== */
+
+/* 暗色变体同时认「系统偏好」与「站内手动切换」两条路径 */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+@theme {
+  /* --- 品牌色：琥珀橙 ------------------------------------------------------
+     500 是品牌识别色，但白字在其上只有 2.90:1 —— 不能做按钮底。
+     链接文字用 700（5.57:1）；实体按钮用 500 底 + 950 字（5.40:1）。      */
+  --color-brand-50: oklch(0.977 0.016 72);
+  --color-brand-100: oklch(0.955 0.036 68);
+  --color-brand-200: oklch(0.907 0.068 62);
+  --color-brand-300: oklch(0.847 0.102 56);
+  --color-brand-400: oklch(0.777 0.146 51);
+  --color-brand-500: oklch(0.695 0.18 47.5);
+  --color-brand-600: oklch(0.616 0.178 45);
+  --color-brand-700: oklch(0.523 0.156 43);
+  --color-brand-800: oklch(0.443 0.14 40);
+  --color-brand-900: oklch(0.383 0.128 37);
+  --color-brand-950: oklch(0.271 0.108 30);
+
+  /* --- 中性色：暖灰（色相跟随品牌，不用冷灰）-------------------------------
+     500 对页面底只有 3.23:1，只可用作边框/图标，不可用作文字。            */
+  --color-sand-50: oklch(0.9885 0.005 72);
+  --color-sand-100: oklch(0.972 0.006 68);
+  --color-sand-200: oklch(0.936 0.007 62);
+  --color-sand-300: oklch(0.882 0.008 56);
+  --color-sand-400: oklch(0.767 0.01 50);
+  --color-sand-500: oklch(0.638 0.011 47);
+  --color-sand-600: oklch(0.529 0.011 45);
+  --color-sand-700: oklch(0.437 0.01 43);
+  --color-sand-800: oklch(0.345 0.009 42);
+  --color-sand-900: oklch(0.259 0.008 40);
+  --color-sand-950: oklch(0.176 0.007 38);
+
+  /* --- 字体 ---------------------------------------------------------------
+     正文走系统字体栈（0 字节）：苹方 / 微软雅黑 / 思源黑体都是高质量黑体。
+     只有展示级标题用自托管的 Noto Sans SC 700 子集（约 139KB）。
+     顺序要点：拉丁字体必须排在中文字体之前，否则中文字体里的半宽拉丁
+     字形会接管英文，英文会变得又扁又丑。                                   */
+  --font-sans:
+    ui-sans-serif, system-ui, -apple-system, "SF Pro Text", "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, "PingFang SC", "HarmonyOS Sans SC",
+    "Hiragino Sans GB", "Microsoft YaHei UI", "Microsoft YaHei",
+    "Source Han Sans SC", "Noto Sans CJK SC", "WenQuanYi Micro Hei", sans-serif,
+    "Apple Color Emoji", "Segoe UI Emoji";
+  --font-display:
+    var(--font-yy-display), ui-sans-serif, system-ui, -apple-system,
+    "PingFang SC", "Microsoft YaHei", sans-serif;
+  /* 引文：霞鹜文楷。系统楷体作兜底，两者气质接近，替换时不突兀 */
+  --font-quote:
+    var(--font-yy-quote), "Kaiti SC", STKaiti, KaiTi, "Songti SC", serif;
+
+  /* --- 中文字号阶梯：每档自带行高与字距 -------------------------------------
+     中文是全字身、无升降部，视觉密度远高于拉丁字母 —— 英文站的 1.5 行高
+     搬到中文相当于 1.3，必然拥挤。正文取 1.8，标题收紧到 1.15–1.4。
+     标题必须用负字距抵消全角字面留下的空隙。                               */
+  --text-caption: 0.8125rem;
+  --text-caption--line-height: 1.7;
+  --text-caption--letter-spacing: 0.02em;
+
+  --text-body: 1rem;
+  --text-body--line-height: 1.8;
+  --text-body--letter-spacing: 0.01em;
+
+  --text-body-lg: 1.0625rem;
+  --text-body-lg--line-height: 1.8;
+  --text-body-lg--letter-spacing: 0.01em;
+
+  --text-lead: 1.1875rem;
+  --text-lead--line-height: 1.75;
+  --text-lead--letter-spacing: 0.005em;
+
+  --text-h4: 1.25rem;
+  --text-h4--line-height: 1.5;
+  --text-h4--letter-spacing: 0;
+  --text-h4--font-weight: 600;
+
+  --text-h3: 1.5rem;
+  --text-h3--line-height: 1.4;
+  --text-h3--letter-spacing: -0.005em;
+  --text-h3--font-weight: 600;
+
+  --text-h2: 2rem;
+  --text-h2--line-height: 1.3;
+  --text-h2--letter-spacing: -0.012em;
+  --text-h2--font-weight: 700;
+
+  --text-h1: 2.625rem;
+  --text-h1--line-height: 1.22;
+  --text-h1--letter-spacing: -0.018em;
+  --text-h1--font-weight: 700;
+
+  --text-display: 3.5rem;
+  --text-display--line-height: 1.12;
+  --text-display--letter-spacing: -0.024em;
+  --text-display--font-weight: 700;
+
+  --text-hero: 4.5rem;
+  --text-hero--line-height: 1.08;
+  --text-hero--letter-spacing: -0.028em;
+  --text-hero--font-weight: 700;
+
+  /* --- 同心圆角：inner = outer − padding --------------------------------
+     这是最能一眼读出「当代 Apple 语言」的信号，而且完全不依赖玻璃 ——
+     就算把所有 backdrop-filter 拿掉，这条规则依然成立。                    */
+  --radius-xs: 6px;
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 18px;
+  --radius-xl: 24px;
+  --radius-2xl: 32px;
+  --radius-3xl: 40px;
+
+  /* --- 阴影：暖调而非纯黑，呼应「上午的阳光打在白墙上」 --------------------- */
+  --shadow-warm-xs: 0 1px 2px oklch(0.3 0.06 40 / 0.05);
+  --shadow-warm-sm: 0 2px 8px oklch(0.3 0.06 40 / 0.06), 0 1px 2px oklch(0.3 0.06 40 / 0.04);
+  --shadow-warm-md: 0 8px 24px oklch(0.3 0.06 40 / 0.08), 0 2px 6px oklch(0.3 0.06 40 / 0.05);
+  --shadow-warm-lg: 0 16px 48px oklch(0.3 0.06 40 / 0.10), 0 4px 12px oklch(0.3 0.06 40 / 0.06);
+  --shadow-warm-xl: 0 28px 72px oklch(0.3 0.06 40 / 0.13), 0 8px 20px oklch(0.3 0.06 40 / 0.07);
+
+  /* --- 动效：Apple 的 ease-out 感 ----------------------------------------- */
+  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out-soft: cubic-bezier(0.65, 0, 0.35, 1);
+  --duration-fast: 160ms;
+  --duration-base: 240ms;
+  --duration-slow: 420ms;
+
+  /* --- 版心 --------------------------------------------------------------- */
+  --container-content: 68rem;
+  --container-prose: 40rem;
+}
+
+/* ===========================================================================
+   主题变量（三态：默认浅色 / 系统暗色 / 手动指定）
+   任何颜色都必须在裸 :root 上有定义 —— 只写在媒体查询里会导致某一态没有值。
+   =========================================================================== */
+:root {
+  color-scheme: light;
+
+  --bg: oklch(0.985 0.006 72);
+  --bg-subtle: oklch(0.962 0.009 66);
+  --surface: #ffffff;
+  --surface-raised: #ffffff;
+
+  --fg: var(--color-sand-900);
+  --fg-muted: var(--color-sand-600);
+  --fg-subtle: var(--color-sand-500); /* 仅图标/边框，不可作文字 */
+  --fg-on-brand: #ffffff;
+
+  --accent: var(--color-brand-700); /* 链接文字：对页面底 5.57:1 */
+  --accent-hover: var(--color-brand-800);
+  --accent-visual: var(--color-brand-500); /* 图形/光晕/装饰，不承载文字 */
+  --accent-soft: var(--color-brand-50);
+
+  /* 主按钮：明亮的品牌橙底 + 深琥珀字 = 5.40:1，既达 AA 又保住「艳阳」的
+     亮度。反过来的「橙底白字」只有 2.90:1，是这套配色里最容易踩的坑。
+     hover 往更亮走（brand-400 上深字 7.42:1），而不是往深走。 */
+  --btn-bg: var(--color-brand-500);
+  --btn-bg-hover: var(--color-brand-400);
+  --btn-fg: var(--color-brand-950);
+
+  /* 主按钮做成「一块颜料」，呼应首屏的手绘油画，而不是一枚扁平的纯色胶囊。
+     渐变的对比度必须按**最亮那一端**验收，否则会漏：
+       brand-400 上 brand-950 = 7.42:1 ✓（亮端）
+       brand-500 上 brand-950 = 5.40:1 ✓（暗端）
+     渐变只在 400↔500 之间走，两端都过 AA。若把暗端延到 brand-600，
+     深棕字会掉到 3.95:1 —— 那是这套配色最容易踩空的地方。 */
+  --btn-gradient: linear-gradient(118deg, var(--color-brand-400) 0%, var(--color-brand-500) 100%);
+  --btn-gradient-hover: linear-gradient(118deg, var(--color-brand-300) 0%, var(--color-brand-400) 100%);
+  --btn-lip: oklch(1 0 0 / 0.38); /* 顶部受光内唇 */
+  --btn-foot: oklch(0.3 0.11 35 / 0.22); /* 底部内阴影 */
+
+  --border: var(--color-sand-200);
+  --border-strong: var(--color-sand-400);
+  --border-input: var(--color-sand-500); /* UI 边界需 3:1 */
+
+  /* 玻璃材质。alpha 是把「Apple 味」和「廉价毛玻璃」分开的最关键一个数：
+     中文笔画比拉丁字母密，能忍受的透明度更低 —— 不要照搬英文界面的数值。 */
+  --glass-tint-nav: oklch(1 0 0 / 0.72);
+  --glass-tint-panel: oklch(1 0 0 / 0.84);
+  --glass-tint-clear: oklch(1 0 0 / 0.16);
+  --glass-solid: oklch(0.995 0.004 72); /* 不支持/降级时的实色兜底 */
+  --glass-blur: 20px;
+  --glass-saturate: 180%;
+  --glass-brightness: 104%;
+  --glass-highlight: oklch(1 0 0 / 0.75); /* 顶部内唇＝镜面高光 */
+  --glass-inner-shade: oklch(0.3 0.06 40 / 0.06);
+  --glass-edge: oklch(0.3 0.06 40 / 0.09); /* iOS 27 新增的 darkened edge */
+  --glass-edge-warm: oklch(0.8 0.14 60 / 0.35); /* 边缘泛的那点淡金光 */
+  --glass-shadow: var(--shadow-warm-lg);
+
+  --focus-ring: var(--color-brand-700);
+
+  /* 首屏油画 —— 浅色主题走「向日葵 / 麦田」：暖米白画布上的铬黄与镉橙 */
+  --paint-sky: oklch(0.958 0.032 88);
+  --paint-sky-2: oklch(0.932 0.068 92);
+  --paint-ground: oklch(0.8 0.145 66);
+  --paint-ground-2: oklch(0.72 0.152 54);
+  --paint-sun-outer: oklch(0.762 0.185 58);
+  --paint-sun-core: oklch(0.875 0.168 84);
+  --paint-ray: oklch(0.845 0.155 76);
+  --paint-fleck: oklch(0.82 0.11 62);
+  --paint-swirl: transparent;
+  --paint-swirl-opacity: 0;
+  --paint-fleck-opacity: 0.3;
+  --paint-impasto-opacity: 0.16;
+  --paint-grain-opacity: 0.07;
+
+  /* 场景插画（影像位填充物） */
+  --art-ground: oklch(0.9 0.075 76);
+  --art-solid: oklch(0.74 0.155 56);
+  --art-accent: oklch(0.66 0.172 46);
+  --art-window: oklch(0.965 0.03 84);
+  --art-leaf: oklch(0.78 0.13 88);
+  --art-sun: oklch(0.86 0.155 82);
+
+  /* 首屏日轮。暗色下要的是「夜里的一盏暖灯」而不是「暗底上的脏白」，
+     所以两套值不是简单的明暗互换 —— 暗色要降明度、保饱和。 */
+  --sun-core: oklch(0.88 0.11 72);
+  --sun-mid: oklch(0.91 0.085 68);
+  --sun-edge: oklch(0.95 0.05 66);
+  --sun-core-a: 0.95;
+  --sun-mid-a: 0.8;
+  --sun-edge-a: 0.45;
+  --sun-line: oklch(0.72 0.14 55);
+  --sun-line-a: 0.16;
+  --sun-ray-a: 0.1;
+  --sun-bounce: oklch(0.9 0.07 52);
+  --sun-bounce-a: 0.35;
+}
+
+/* 系统暗色。用 :not([data-theme="light"]) 守住，手动选浅色时不被覆盖。 */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+
+    --bg: oklch(0.178 0.008 60);
+    --bg-subtle: oklch(0.208 0.009 60);
+    --surface: oklch(0.232 0.01 60);
+    --surface-raised: oklch(0.262 0.011 60);
+
+    --fg: var(--color-sand-100);
+    --fg-muted: var(--color-sand-400);
+    --fg-subtle: var(--color-sand-500);
+    --fg-on-brand: oklch(0.178 0.008 60);
+
+    --accent: var(--color-brand-400); /* 暗底上 8.96:1 */
+    --accent-hover: var(--color-brand-300);
+    --accent-visual: var(--color-brand-500);
+    --accent-soft: oklch(0.3 0.07 45);
+
+    --btn-bg: var(--color-brand-400);
+    --btn-bg-hover: var(--color-brand-300);
+    --btn-fg: oklch(0.178 0.008 60);
+
+    --border: oklch(0.32 0.012 50);
+    --border-strong: var(--color-sand-600);
+    --border-input: var(--color-sand-600); /* 暗面上 3.18:1 */
+
+    /* 暗色下玻璃参数必须反向调：背景吞光，要提亮度、降饱和，
+       高光要弱得多，否则看起来像塑料而不是玻璃。 */
+    --glass-tint-nav: oklch(0.222 0.009 60 / 0.74);
+    --glass-tint-panel: oklch(0.222 0.009 60 / 0.86);
+    --glass-tint-clear: oklch(0.16 0.008 60 / 0.28);
+    --glass-solid: oklch(0.222 0.009 60);
+    --glass-blur: 24px;
+    --glass-saturate: 140%;
+    --glass-brightness: 128%;
+    --glass-highlight: oklch(1 0 0 / 0.14);
+    --glass-inner-shade: oklch(0 0 0 / 0.3);
+    --glass-edge: oklch(1 0 0 / 0.09);
+    --glass-edge-warm: oklch(0.75 0.14 60 / 0.28);
+    --glass-shadow: 0 16px 48px oklch(0 0 0 / 0.45), 0 4px 12px oklch(0 0 0 / 0.3);
+
+    --focus-ring: var(--color-brand-400);
+
+    /* 首屏油画 —— 深色主题走「星月夜」：深靛蓝上的漩涡与亮黄，
+       不是浅色版的简单反色，两套各有出处 */
+    --paint-sky: oklch(0.218 0.072 258);
+    --paint-sky-2: oklch(0.272 0.086 254);
+    --paint-ground: oklch(0.3 0.072 250);
+    --paint-ground-2: oklch(0.242 0.062 253);
+    --paint-sun-outer: oklch(0.72 0.172 66);
+    --paint-sun-core: oklch(0.878 0.162 88);
+    --paint-ray: oklch(0.782 0.152 78);
+    --paint-fleck: oklch(0.86 0.14 88);
+    --paint-swirl: oklch(0.6 0.105 245);
+    --paint-swirl-opacity: 0.6;
+    --paint-fleck-opacity: 0.5;
+    --paint-impasto-opacity: 0.24;
+    --paint-grain-opacity: 0.1;
+
+    --art-ground: oklch(0.3 0.062 250);
+    --art-solid: oklch(0.42 0.088 248);
+    --art-accent: oklch(0.66 0.16 52);
+    --art-window: oklch(0.82 0.14 86);
+    --art-leaf: oklch(0.44 0.09 200);
+    --art-sun: oklch(0.85 0.155 86);
+
+    --sun-core: oklch(0.62 0.16 58);
+    --sun-mid: oklch(0.5 0.13 52);
+    --sun-edge: oklch(0.36 0.09 48);
+    --sun-core-a: 0.55;
+    --sun-mid-a: 0.4;
+    --sun-edge-a: 0.22;
+    --sun-line: oklch(0.7 0.14 58);
+    --sun-line-a: 0.14;
+    --sun-ray-a: 0.08;
+    --sun-bounce: oklch(0.55 0.11 45);
+    --sun-bounce-a: 0.22;
+  }
+}
+
+/* 手动切到暗色（站内开关），需与上面保持一致 */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --bg: oklch(0.178 0.008 60);
+  --bg-subtle: oklch(0.208 0.009 60);
+  --surface: oklch(0.232 0.01 60);
+  --surface-raised: oklch(0.262 0.011 60);
+
+  --fg: var(--color-sand-100);
+  --fg-muted: var(--color-sand-400);
+  --fg-subtle: var(--color-sand-500);
+  --fg-on-brand: oklch(0.178 0.008 60);
+
+  --accent: var(--color-brand-400); /* 暗底上 8.96:1 */
+  --accent-hover: var(--color-brand-300);
+  --accent-visual: var(--color-brand-500);
+  --accent-soft: oklch(0.3 0.07 45);
+
+  --btn-bg: var(--color-brand-400);
+  --btn-bg-hover: var(--color-brand-300);
+  --btn-fg: oklch(0.178 0.008 60);
+
+  --border: oklch(0.32 0.012 50);
+  --border-strong: var(--color-sand-600);
+  --border-input: var(--color-sand-600);
+
+  --glass-tint-nav: oklch(0.222 0.009 60 / 0.74);
+  --glass-tint-panel: oklch(0.222 0.009 60 / 0.86);
+  --glass-tint-clear: oklch(0.16 0.008 60 / 0.28);
+  --glass-solid: oklch(0.222 0.009 60);
+  --glass-blur: 24px;
+  --glass-saturate: 140%;
+  --glass-brightness: 128%;
+  --glass-highlight: oklch(1 0 0 / 0.14);
+  --glass-inner-shade: oklch(0 0 0 / 0.3);
+  --glass-edge: oklch(1 0 0 / 0.09);
+  --glass-edge-warm: oklch(0.75 0.14 60 / 0.28);
+  --glass-shadow: 0 16px 48px oklch(0 0 0 / 0.45), 0 4px 12px oklch(0 0 0 / 0.3);
+
+  --focus-ring: var(--color-brand-400);
+
+  /* 首屏油画 —— 深色主题走「星月夜」：深靛蓝上的漩涡与亮黄，
+     不是浅色版的简单反色，两套各有出处 */
+  --paint-sky: oklch(0.218 0.072 258);
+  --paint-sky-2: oklch(0.272 0.086 254);
+  --paint-ground: oklch(0.3 0.072 250);
+  --paint-ground-2: oklch(0.242 0.062 253);
+  --paint-sun-outer: oklch(0.72 0.172 66);
+  --paint-sun-core: oklch(0.878 0.162 88);
+  --paint-ray: oklch(0.782 0.152 78);
+  --paint-fleck: oklch(0.86 0.14 88);
+  --paint-swirl: oklch(0.6 0.105 245);
+  --paint-swirl-opacity: 0.6;
+  --paint-fleck-opacity: 0.5;
+  --paint-impasto-opacity: 0.24;
+  --paint-grain-opacity: 0.1;
+
+  --art-ground: oklch(0.3 0.062 250);
+  --art-solid: oklch(0.42 0.088 248);
+  --art-accent: oklch(0.66 0.16 52);
+  --art-window: oklch(0.82 0.14 86);
+  --art-leaf: oklch(0.44 0.09 200);
+  --art-sun: oklch(0.85 0.155 86);
+
+  --sun-core: oklch(0.62 0.16 58);
+  --sun-mid: oklch(0.5 0.13 52);
+  --sun-edge: oklch(0.36 0.09 48);
+  --sun-core-a: 0.55;
+  --sun-mid-a: 0.4;
+  --sun-edge-a: 0.22;
+  --sun-line: oklch(0.7 0.14 58);
+  --sun-line-a: 0.14;
+  --sun-ray-a: 0.08;
+  --sun-bounce: oklch(0.55 0.11 45);
+  --sun-bounce-a: 0.22;
+}
+
+/* 把主题变量接回 Tailwind 的 color 系统，这样 bg-surface / text-fg 都能用 */
+@theme inline {
+  --color-bg: var(--bg);
+  --color-bg-subtle: var(--bg-subtle);
+  --color-surface: var(--surface);
+  --color-surface-raised: var(--surface-raised);
+  --color-fg: var(--fg);
+  --color-fg-muted: var(--fg-muted);
+  --color-fg-subtle: var(--fg-subtle);
+  --color-fg-on-brand: var(--fg-on-brand);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-visual: var(--accent-visual);
+  --color-accent-soft: var(--accent-soft);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-border-input: var(--border-input);
+}
+
+/* ===========================================================================
+   基础层
+   =========================================================================== */
+@layer base {
+  :root {
+    /* 中英混排四件套 —— 本项目性价比最高的几行 CSS。
+       注意 text-autospace 不写就等于没有：三家浏览器的实际初始值都是
+       no-autospace，与规范里的 normal 不符。写上之后 Chrome 140+/
+       Safari 18.4+/Firefox 145+ 直接拿到中英文自动间距，
+       其余浏览器只是没有间距，不会出错。                                   */
+    text-autospace: normal;
+    text-spacing-trim: trim-start; /* 行首括号/引号挤压，Chromium 生效 */
+    line-break: strict; /* 避头尾：句读不落行首 */
+    font-synthesis-weight: none; /* 中文伪粗是横向涂抹，密笔画会糊成黑块 */
+    font-synthesis-style: none;
+
+    /* 粘性玻璃导航会遮住 Tab 到的元素 —— 直接违反 WCAG 2.2 SC 2.4.11 (AA)。
+       这两行是唯一的修法，自动化工具查不出来这个问题。                     */
+    scroll-padding-top: 5.5rem;
+  }
+
+  [id] {
+    scroll-margin-top: 5.5rem;
+  }
+
+  html {
+    /* 视口边缘的 fixed/sticky 元素会被 Safari 26+ 拿去染工具栏色，
+       且它不再读 theme-color —— html/body 必须有显式背景色。            */
+    background-color: var(--bg);
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: var(--bg);
+    color: var(--fg);
+    font-family: var(--font-sans);
+    font-size: var(--text-body);
+    line-height: 1.8;
+    letter-spacing: 0.01em;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display);
+    text-wrap: balance; /* 多行标题各行等长；只用在短文本上 */
+  }
+
+  p {
+    text-wrap: pretty; /* 消除孤字尾行；Firefox 不支持会优雅降级 */
+  }
+
+  /* 焦点圈：双色描边，保证在玻璃与照片背景上都可见（SC 2.4.11 / 2.4.13） */
+  :focus-visible {
+    outline: 3px solid var(--focus-ring);
+    outline-offset: 2px;
+    border-radius: var(--radius-xs);
+  }
+
+  ::selection {
+    background: var(--color-brand-200);
+    color: var(--color-brand-950);
+  }
+}
+
+/* ===========================================================================
+   液态玻璃材质
+   ---------------------------------------------------------------------------
+   Apple HIG 的硬规则：玻璃是导航/控件的功能层，「Don't use Liquid Glass in
+   the content layer」。所以本站玻璃只出现在 —— 顶部导航、移动端抽屉、
+   浮动操作条。项目卡片、年报表格、财务数据一律实色。
+
+   这条规则同时解决了性能问题：同屏 backdrop-filter 实例数被自然压到个位数。
+
+   实现要点（均来自浏览器实测）：
+   · 必须同时写 -webkit-backdrop-filter，Safari 9–17.x 只认前缀版
+   · 实色兜底先行，只有在 @supports 内才转半透明 —— 否则不支持时直接不可读
+   · 渐变描边要用 padding + 双 mask + exclude，原生 border 承载不了渐变
+   · 祖先链上出现 opacity<1 / 任何 filter / will-change:opacity 会静默
+     破坏 backdrop-filter，浏览器不报任何错。translateZ(0)、overflow:hidden、
+     contain:paint、isolation:isolate 都是安全的。
+   =========================================================================== */
+
+@utility glass-base {
+  position: relative;
+  isolation: isolate;
+  background-color: var(--glass-solid);
+  box-shadow:
+    inset 0 1px 0 0 var(--glass-highlight),
+    inset 0 -1px 0 0 var(--glass-inner-shade),
+    0 0 0 1px var(--glass-edge),
+    var(--glass-shadow);
+}
+
+/* 顶部导航：小面积、常驻，用较低 alpha 与较小模糊 */
+@utility glass-nav {
+  position: relative;
+  isolation: isolate;
+  background-color: var(--glass-solid);
+  box-shadow:
+    inset 0 1px 0 0 var(--glass-highlight),
+    inset 0 -1px 0 0 var(--glass-inner-shade),
+    0 1px 0 0 var(--glass-edge);
+  /* 这里曾经写过 contain: paint 来限制模糊采样范围。它对 backdrop-filter
+     确实是安全的，但它同时会裁掉所有溢出的子元素 —— 显示偏好面板正是绝对
+     定位在 header 下方的，于是面板一直在渲染，只是被裁得完全看不见。
+     导航条那点模糊开销远不值得为此牺牲一个弹出层。 */
+
+  @supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+    background-color: var(--glass-tint-nav);
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate))
+      brightness(var(--glass-brightness));
+    backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate))
+      brightness(var(--glass-brightness));
+  }
+}
+
+/* 浮层/抽屉：面积大 → 模拟更厚的材质，更高 alpha、更大模糊、更浓阴影
+   （Apple 的「尺寸即厚度」规则；大元素也不做明暗翻转，只做适应） */
+@utility glass-panel {
+  position: relative;
+  isolation: isolate;
+  border-radius: var(--radius-xl);
+  background-color: var(--glass-solid);
+  box-shadow:
+    inset 0 1px 0 0 var(--glass-highlight),
+    inset 0 -1px 0 0 var(--glass-inner-shade),
+    0 0 0 1px var(--glass-edge),
+    var(--glass-shadow);
+
+  @supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+    background-color: var(--glass-tint-panel);
+    -webkit-backdrop-filter: blur(calc(var(--glass-blur) * 1.3))
+      saturate(var(--glass-saturate)) brightness(var(--glass-brightness));
+    backdrop-filter: blur(calc(var(--glass-blur) * 1.3)) saturate(var(--glass-saturate))
+      brightness(var(--glass-brightness));
+  }
+}
+
+/* Clear 变体：只允许出现在 Hero 的照片/视频之上，且下方必须有压暗层。
+   Apple HIG 给出的唯一硬数值就是这个 35%。
+   规则：Clear 与 Regular 绝不在同一个页面混用。 */
+@utility glass-clear {
+  position: relative;
+  isolation: isolate;
+  background-color: var(--glass-tint-clear);
+  box-shadow:
+    inset 0 1px 0 0 oklch(1 0 0 / 0.3),
+    0 0 0 1px oklch(1 0 0 / 0.14);
+
+  @supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+    -webkit-backdrop-filter: blur(12px) saturate(160%);
+    backdrop-filter: blur(12px) saturate(160%);
+  }
+}
+
+/* 玻璃边缘那道淡金光 —— 「暖阳」方向的签名细节。
+   用 padding + 双 mask 相减出 1px 的环，因为原生 border 无法承载渐变。 */
+@utility glass-rim {
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(
+      160deg,
+      var(--glass-edge-warm) 0%,
+      transparent 38%,
+      transparent 62%,
+      oklch(1 0 0 / 0.18) 100%
+    );
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor; /* Chrome <120 与旧 WebKit 用这个关键字 */
+    mask-composite: exclude; /* Chrome 120+ / FF 53+ / Safari 15.4+ */
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  & > * {
+    position: relative;
+    z-index: 2;
+  }
+}
+
+/* Hero 压暗层：Clear 玻璃下方若背景明亮，HIG 要求 35% 深色遮罩 */
+@utility hero-dim {
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      to bottom,
+      oklch(0.2 0.03 50 / 0.45) 0%,
+      oklch(0.2 0.03 50 / 0.28) 45%,
+      oklch(0.2 0.03 50 / 0.5) 100%
+    );
+    pointer-events: none;
+  }
+}
+
+/* ===========================================================================
+   按钮：一块颜料
+   ---------------------------------------------------------------------------
+   首屏是手绘油画，按钮却是扁平纯色胶囊的话，两套语言会打架。所以主按钮
+   带上颜料的实体感：日光渐变作底、顶部一道受光内唇、底部内阴影收口，
+   外加一层暖色投影把它从画布上托起来。
+
+   仍然是 capsule 圆角（半径 = 高度 50%）—— 那是最能一眼读出「当代」的
+   单一信号，且完全不依赖任何效果。
+   =========================================================================== */
+@utility btn-paint {
+  background: var(--btn-gradient);
+  color: var(--btn-fg);
+  box-shadow:
+    inset 0 1px 0 0 var(--btn-lip),
+    inset 0 -1px 0 0 var(--btn-foot),
+    0 2px 10px oklch(0.55 0.16 45 / 0.22),
+    0 1px 2px oklch(0.4 0.12 40 / 0.16);
+
+  &:hover {
+    background: var(--btn-gradient-hover);
+    box-shadow:
+      inset 0 1px 0 0 var(--btn-lip),
+      inset 0 -1px 0 0 var(--btn-foot),
+      0 6px 20px oklch(0.55 0.16 45 / 0.3),
+      0 2px 5px oklch(0.4 0.12 40 / 0.2);
+  }
+}
+
+/* 次按钮：画布纸白 + 暖描边，与主按钮同源但退后一层 */
+@utility btn-paper {
+  background: var(--surface);
+  color: var(--fg);
+  box-shadow:
+    inset 0 0 0 1px var(--btn-paper-edge, oklch(0.68 0.1 50 / 0.32)),
+    inset 0 1px 0 0 oklch(1 0 0 / 0.7),
+    0 1px 3px oklch(0.4 0.1 40 / 0.1);
+
+  &:hover {
+    box-shadow:
+      inset 0 0 0 1px var(--btn-paper-edge-hover, oklch(0.62 0.14 48 / 0.55)),
+      inset 0 1px 0 0 oklch(1 0 0 / 0.7),
+      0 3px 10px oklch(0.4 0.1 40 / 0.14);
+  }
+}
+
+/* 内容层专用：实色卡片。信息公开、年报、财务、隐私政策一律用这个，
+   不加任何 backdrop-filter —— 这些页面要的是严肃与可读，不是效果。 */
+@utility solid-card {
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-warm-sm);
+}
+
+/* ===========================================================================
+   降级与无障碍
+   ---------------------------------------------------------------------------
+   顺序很重要：prefers-reduced-transparency 覆盖率最差（Safari 明确
+   反对该标准、永不支持，而 Apple 生态正是最可能开启「降低透明度」的用户），
+   所以它只能是四条防线之一，绝不能当唯一防线。
+   =========================================================================== */
+
+/* 1. 显式的「降低透明度」偏好（Chrome 118+，Safari 不支持） */
+@media (prefers-reduced-transparency: reduce) {
+  .glass-nav,
+  .glass-panel,
+  .glass-clear,
+  .glass-base {
+    background-color: var(--glass-solid) !important;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+}
+
+/* 2. prefers-contrast 才是 Apple 平台上真正可用的信号：
+      macOS 开启「增强对比度」会连带自动开启「降低透明度」。
+      Apple 在这个模式下的行为是元素近乎纯黑/纯白 + 加对比描边。 */
+@media (prefers-contrast: more) {
+  .glass-nav,
+  .glass-panel,
+  .glass-clear,
+  .glass-base {
+    background-color: var(--surface) !important;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+    box-shadow: none !important;
+    border: 1px solid currentColor;
+  }
+
+  .glass-rim::before {
+    display: none;
+  }
+}
+
+/* 3. Windows 高对比度模式 */
+@media (forced-colors: active) {
+  .glass-nav,
+  .glass-panel,
+  .glass-clear,
+  .glass-base {
+    background: Canvas !important;
+    color: CanvasText;
+    border: 1px solid CanvasText;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+
+  .glass-rim::before {
+    display: none;
+  }
+}
+
+/* 4. 站内手动开关 —— 胜过以上所有猜测。
+      受众年龄跨度大、视力障碍比例高于平均的公益站，这是必需品而非锦上添花。
+      用法：document.documentElement.dataset.glass = "off" */
+:root[data-glass="off"] .glass-nav,
+:root[data-glass="off"] .glass-panel,
+:root[data-glass="off"] .glass-clear,
+:root[data-glass="off"] .glass-base {
+  background-color: var(--glass-solid) !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+
+:root[data-glass="off"] .glass-rim::before {
+  display: none;
+}
+
+/* 移动端把模糊半径压下来：blur 成本约 O(r²)，半径翻倍成本约 4 倍 */
+@media (max-width: 768px) {
+  :root {
+    --glass-blur: 10px;
+  }
+}
+
+/* 动效偏好：压缩时长而不是 animation:none —— 后者会让依赖
+   animationend/transitionend 的逻辑永远等不到回调而卡死。 */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  /* View Transitions 的默认 crossfade 不受上面的 * 选择器约束，
+     必须单独关掉 —— 这一条几乎所有教程都漏了。 */
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+
+  .reveal {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
+/* ===========================================================================
+   入场动画
+   默认路径是 IntersectionObserver（触发后立即 unobserve，不拖累主线程）；
+   支持 scroll-driven 的浏览器走纯 CSS，整段卸掉 JS。
+   只动 transform 与 opacity —— 动 width/height/top/left 会造成 CLS。
+   =========================================================================== */
+@layer components {
+  /* 默认可见。这一条是硬底线：内容绝不能因为动画路径没跑起来而消失。
+     入场动画只在 JS 明确接管后才启用 —— 由 layout 里的内联脚本在首帧前
+     打上 data-reveal="on"，所以不会出现「先显示再变透明」的闪烁。
+
+     早先这里走的是 animation-timeline: view() 的纯 CSS 方案，看起来更优雅
+     （零 JS），但实测在整页渲染路径下动画不触发，整屏内容保持 opacity:0。
+     可靠性优先于省下这一个观察者。 */
+  .reveal {
+    opacity: 1;
+    transform: none;
+  }
+
+  :root[data-reveal="on"] .reveal {
+    opacity: 0;
+    transform: translateY(10px);
+    /* 280ms 而不是 420ms：入场动画是给内容一个出场的交代，不是让人等它演完。
+       位移也从 14px 收到 10px —— 幅度越小越不容易读成「卡了一下」。 */
+    transition:
+      opacity 280ms var(--ease-out-soft),
+      transform 280ms var(--ease-out-soft);
+  }
+
+  :root[data-reveal="on"] .reveal.is-in {
+    opacity: 1;
+    transform: none;
+  }
+
+  /* 跳过导航链接：键盘用户的第一个可达元素 */
+  .skip-link {
+    position: absolute;
+    left: -9999px;
+    top: 0;
+  }
+
+  .skip-link:focus {
+    position: fixed;
+    left: 1rem;
+    top: 1rem;
+    z-index: 100;
+    padding: 0.75rem 1.25rem;
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    color: var(--fg);
+    box-shadow: var(--shadow-warm-lg);
+  }
+
+  /* WCAG 2.2 SC 2.5.8 (AA)：可点目标 ≥24×24 CSS px。
+     玻璃风设计里图标常做得很精致小巧，是这条的高发区。 */
+  .tap-target {
+    min-inline-size: 44px;
+    min-block-size: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+
+/* ===========================================================================
+   日光渐变 —— 品牌的核心视觉资产
+   ---------------------------------------------------------------------------
+   这块暖橙是整套设计里最有辨识度的东西，所以它不该只是某一个区块的背景色，
+   而要成为可复用的命名资产。三档强度分工：
+
+     --gradient-sun        满饱和。整幅背景用：理事长致辞、结尾区块。
+     --gradient-sun-soft   中等。构件用：日轮、徽章、图标底、hover 光晕。
+     --gradient-sun-line   线性版。文字渐变、细线、进度条用。
+
+   分档的意义在于保持重点 —— 如果每一处都用满饱和，等于哪一处都不突出。
+   =========================================================================== */
+@theme {
+  --gradient-sun:
+    radial-gradient(120% 130% at 82% 8%, oklch(0.72 0.17 62) 0%, transparent 58%),
+    linear-gradient(158deg, oklch(0.63 0.178 48) 0%, oklch(0.55 0.168 40) 100%);
+
+  --gradient-sun-soft:
+    radial-gradient(circle at 36% 30%, oklch(0.8 0.16 72) 0%, oklch(0.71 0.178 55) 44%,
+      oklch(0.63 0.175 44) 78%, oklch(0.6 0.17 40) 100%);
+
+  --gradient-sun-line:
+    linear-gradient(96deg, oklch(0.72 0.178 62) 0%, oklch(0.62 0.178 46) 52%,
+      oklch(0.56 0.168 38) 100%);
+}
+
+/* 满幅日光背景。整块区域用，文字一律走白。 */
+@utility sun-surface {
+  background: var(--gradient-sun);
+}
+
+/* 日光渐变文字。中文笔画密，渐变跨度要够大才看得出来，
+   所以只用在展示级大字上，正文绝不用。 */
+@utility sun-text {
+  background: var(--gradient-sun-line);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* 饱和暖色区块：明亮画布上的重音符。深色只留给页面收尾一处。 */
+@utility surface-warm {
+  --bg: oklch(0.6 0.176 45);
+  --bg-subtle: oklch(0.56 0.172 44);
+  --surface: oklch(0.65 0.17 47);
+  --surface-raised: oklch(0.69 0.166 48);
+
+  --fg: oklch(0.995 0.01 80);
+  --fg-muted: oklch(0.93 0.045 75);
+  --fg-subtle: oklch(0.84 0.07 70);
+
+  --accent: oklch(0.995 0.01 80);
+  --accent-hover: #ffffff;
+  --accent-visual: oklch(0.93 0.09 85);
+  --accent-soft: oklch(0.52 0.16 42);
+
+  --btn-bg: oklch(0.995 0.01 80);
+  --btn-bg-hover: #ffffff;
+  --btn-fg: oklch(0.38 0.128 37);
+
+  /* 橙底上主按钮翻成纸白 + 深琥珀字（15.6:1）—— 同色系的按钮压在同色系的
+     背景上会糊掉，这里必须靠明度反转把它拎出来 */
+  --btn-gradient: linear-gradient(118deg, #ffffff 0%, oklch(0.978 0.014 84) 100%);
+  --btn-gradient-hover: linear-gradient(118deg, #ffffff 0%, #ffffff 100%);
+  --btn-lip: oklch(1 0 0 / 0.9);
+  --btn-foot: oklch(0.45 0.11 38 / 0.16);
+  --btn-paper-edge: oklch(1 0 0 / 0.5);
+  --btn-paper-edge-hover: oklch(1 0 0 / 0.78);
+
+  --border: oklch(1 0 0 / 0.22);
+  --border-strong: oklch(1 0 0 / 0.4);
+  --border-input: oklch(1 0 0 / 0.5);
+
+  --focus-ring: #ffffff;
+
+  background: var(--gradient-sun);
+  color: var(--fg);
+}
+
+/* ===========================================================================
+   局部深色区块
+   ---------------------------------------------------------------------------
+   整站是浅色的，但需要深色区块来制造黑白节奏 —— 首屏、结尾 CTA、导航。
+   全程一个调子的页面必然显得平，这是上一版最大的结构性问题。
+
+   做法是在子树内重定义语义变量，而不是写一堆 dark: 前缀：这样区块内的所有
+   组件（按钮、卡片、玻璃）都自动切换，不需要各自感知自己在什么底色上。
+   =========================================================================== */
+@utility surface-dark {
+  color-scheme: dark;
+
+  --bg: oklch(0.166 0.012 55);
+  --bg-subtle: oklch(0.196 0.014 55);
+  --surface: oklch(0.216 0.015 55);
+  --surface-raised: oklch(0.246 0.016 55);
+
+  --fg: oklch(0.975 0.008 70);
+  --fg-muted: oklch(0.76 0.012 60);
+  --fg-subtle: oklch(0.58 0.012 55);
+
+  --accent: var(--color-brand-400);
+  --accent-hover: var(--color-brand-300);
+  --accent-visual: var(--color-brand-500);
+  --accent-soft: oklch(0.3 0.075 45);
+
+  /* 深色块上的主按钮走「白底深字」—— 参考了同类站点的做法，
+     在深底上这比彩色按钮更干净有力，对比度也拉满（15.6:1）。 */
+  --btn-bg: oklch(0.975 0.008 70);
+  --btn-bg-hover: #ffffff;
+  --btn-fg: oklch(0.166 0.012 55);
+
+  --btn-gradient: linear-gradient(118deg, oklch(0.985 0.01 76) 0%, oklch(0.955 0.016 72) 100%);
+  --btn-gradient-hover: linear-gradient(118deg, #ffffff 0%, oklch(0.985 0.01 76) 100%);
+  --btn-lip: oklch(1 0 0 / 0.85);
+  --btn-foot: oklch(0.2 0.02 55 / 0.2);
+  --btn-paper-edge: oklch(1 0 0 / 0.24);
+  --btn-paper-edge-hover: oklch(1 0 0 / 0.45);
+
+  --border: oklch(0.3 0.014 55);
+  --border-strong: oklch(0.42 0.016 55);
+  --border-input: oklch(0.48 0.016 55);
+
+  --glass-tint-nav: oklch(0.19 0.014 55 / 0.72);
+  --glass-tint-panel: oklch(0.2 0.014 55 / 0.8);
+  --glass-tint-clear: oklch(0.16 0.012 55 / 0.28);
+  --glass-solid: oklch(0.2 0.014 55);
+  --glass-highlight: oklch(1 0 0 / 0.13);
+  --glass-inner-shade: oklch(0 0 0 / 0.35);
+  --glass-edge: oklch(1 0 0 / 0.1);
+  --glass-edge-warm: oklch(0.75 0.15 62 / 0.42);
+  --glass-shadow: 0 16px 48px oklch(0 0 0 / 0.5);
+
+  --focus-ring: var(--color-brand-300);
+
+  /* 深底上的日轮：这才是「艳阳」该有的样子 —— 暖橙光在近黑底上是日出，
+     在浅底上只是一团脏黄。上一版把它放在暖白底上，是视觉上最大的浪费。 */
+  --sun-core: oklch(0.7 0.185 55);
+  --sun-mid: oklch(0.48 0.145 42);
+  --sun-edge: oklch(0.26 0.075 38);
+  --sun-core-a: 0.62;
+  --sun-mid-a: 0.4;
+  --sun-edge-a: 0.16;
+  --sun-line: oklch(0.8 0.16 62);
+  --sun-line-a: 0.26;
+  --sun-ray-a: 0.09;
+  --sun-bounce: oklch(0.42 0.1 42);
+  --sun-bounce-a: 0.22;
+
+  background-color: var(--bg);
+  color: var(--fg);
+}
+
+/* ===========================================================================
+   中文正文块
+   =========================================================================== */
+@utility prose-zh {
+  max-width: var(--container-prose); /* ≈36 汉字/行 */
+  line-height: 1.8;
+  letter-spacing: 0.01em;
+  color: var(--fg-muted);
+
+  & p + p {
+    margin-block-start: 1.2em; /* 段间距优于首行缩进：Web 上缩进比例会失真 */
+  }
+
+  & strong {
+    color: var(--fg);
+    font-weight: 600;
+  }
+
+  & a {
+    color: var(--accent);
+    text-underline-offset: 0.25em;
+    text-decoration-thickness: 1px;
+  }
+}
+
+/* 玻璃上的中文：拉丁字母能撑住的透明度中文撑不住，需要额外补偿 */
+@utility glass-text {
+  font-weight: 500; /* 比实色底上加重一档 */
+  -webkit-font-smoothing: auto; /* antialiased 会让本已密集的中文笔画更细更糊 */
+  letter-spacing: 0.03em; /* 给密笔画留呼吸空间 */
+}
+
+/* ===========================================================================
+   引文
+   ---------------------------------------------------------------------------
+   楷体是全站唯一「有性格」的字体，所以要用得少、用得准：古语题引、
+   理事长致辞。楷体的字面比黑体小，字距要略微放开才不显局促；
+   笔锋在小字号下会糊，所以最小只用到 caption 档。
+   =========================================================================== */
+@utility quote-type {
+  font-family: var(--font-quote);
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  /* 楷体笔锋细，antialiased 会让它更飘 —— 交回给系统渲染 */
+  -webkit-font-smoothing: auto;
+}

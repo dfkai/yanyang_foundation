@@ -1,0 +1,443 @@
+/* ===========================================================================
+   光学效果层
+   ---------------------------------------------------------------------------
+   「艳阳」要的是明亮 + 流动的光，而不是暗底上的一颗光球。这里把几种效果做成
+   可复用的工具类：流动的极光斑、旋转边框光、扫光、网格与点阵、径向遮罩。
+
+   三条硬约束贯穿全文件：
+   1. 只动 transform / opacity / 自定义角度属性 —— 绝不动 blur 半径或
+      backdrop-filter 本身，那会让每帧重做全屏采样，中低端安卓直接掉到 20fps。
+   2. 光斑用独立图层承载，不给它们的祖先加 opacity/filter ——
+      那会静默摧毁子元素的 backdrop-filter，且浏览器不报任何错。
+   3. 所有动效在 prefers-reduced-motion 下停住（在 globals.css 里统一处理）。
+   =========================================================================== */
+
+/* @property 让自定义属性可被插值。没有它，conic-gradient 的角度动画不会生效，
+   浏览器会把 --angle 当字符串直接跳变。这是旋转边框光的前提。 */
+@property --angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
+@property --glow-x {
+  syntax: "<percentage>";
+  initial-value: 50%;
+  inherits: false;
+}
+
+@property --glow-y {
+  syntax: "<percentage>";
+  initial-value: 50%;
+  inherits: false;
+}
+
+/* ---------------------------------------------------------------------------
+   1. 极光斑：明亮画布上缓慢流动的暖色光团
+   每个斑块自己 blur，靠 translate 位移 —— 动的是合成层，不是滤镜。
+   --------------------------------------------------------------------------- */
+@utility aurora-field {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  /* 独立合成层，避免光斑移动时连累整页重绘 */
+  contain: strict;
+}
+
+@utility aurora-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(var(--blob-blur, 90px));
+  /* 明亮底上用 multiply 才能压出色彩，screen 会把浅色冲成一片白 */
+  mix-blend-mode: var(--blob-blend, multiply);
+  will-change: transform;
+  animation: aurora-drift var(--blob-dur, 26s) var(--ease-in-out-soft) infinite alternate;
+  animation-delay: var(--blob-delay, 0s);
+}
+
+@keyframes aurora-drift {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(var(--blob-dx, 4%), var(--blob-dy, -3%), 0) scale(1.08);
+  }
+  100% {
+    transform: translate3d(calc(var(--blob-dx, 4%) * -0.6), var(--blob-dy2, 4%), 0)
+      scale(0.96);
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   2. 旋转边框光
+   conic-gradient 沿 --angle 转，双 mask 相减只留 1px 环。
+   原生 border 承载不了渐变，这是唯一做法。
+   --------------------------------------------------------------------------- */
+@utility ring-spin {
+  position: relative;
+  isolation: isolate;
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: var(--ring-w, 1.5px);
+    background: conic-gradient(
+      from var(--angle),
+      transparent 0deg,
+      var(--ring-color, oklch(0.72 0.18 55)) 42deg,
+      color-mix(in oklab, var(--ring-color, oklch(0.72 0.18 55)) 40%, transparent) 76deg,
+      transparent 130deg,
+      transparent 360deg
+    );
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor; /* Chrome <120 与旧 WebKit 的关键字 */
+    mask-composite: exclude;
+    animation: ring-rotate var(--ring-dur, 6s) linear infinite;
+    pointer-events: none;
+    z-index: 1;
+  }
+}
+
+@keyframes ring-rotate {
+  to {
+    --angle: 360deg;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   3. 扫光：一道高光斜掠过表面，只在 hover 时跑一次
+   --------------------------------------------------------------------------- */
+@utility sheen {
+  position: relative;
+  overflow: hidden;
+
+  &::after {
+    content: "";
+    position: absolute;
+    inset: -40%;
+    background: linear-gradient(
+      104deg,
+      transparent 38%,
+      oklch(1 0 0 / 0.55) 48%,
+      oklch(1 0 0 / 0.18) 54%,
+      transparent 62%
+    );
+    transform: translateX(-120%);
+    pointer-events: none;
+    z-index: 2;
+  }
+
+  &:hover::after,
+  &:focus-visible::after {
+    animation: sheen-sweep 0.9s var(--ease-out-soft) 1;
+  }
+}
+
+@keyframes sheen-sweep {
+  to {
+    transform: translateX(120%);
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   4. 网格与点阵：让明亮的大片留白有结构
+   一律配径向遮罩淡出，不留硬边 —— 这是这类图案不显廉价的关键。
+   --------------------------------------------------------------------------- */
+@utility grid-lines {
+  background-image:
+    linear-gradient(to right, var(--grid-color, oklch(0.55 0.06 55 / 0.09)) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--grid-color, oklch(0.55 0.06 55 / 0.09)) 1px, transparent 1px);
+  background-size: var(--grid-size, 64px) var(--grid-size, 64px);
+  -webkit-mask-image: radial-gradient(
+    var(--grid-fade, 78% 70%) at var(--grid-origin, 50% 30%),
+    #000 0%,
+    transparent 100%
+  );
+  mask-image: radial-gradient(
+    var(--grid-fade, 78% 70%) at var(--grid-origin, 50% 30%),
+    #000 0%,
+    transparent 100%
+  );
+}
+
+@utility dot-grid {
+  background-image: radial-gradient(
+    circle at 1px 1px,
+    var(--dot-color, oklch(0.55 0.08 55 / 0.16)) 1px,
+    transparent 0
+  );
+  background-size: var(--dot-size, 22px) var(--dot-size, 22px);
+  -webkit-mask-image: radial-gradient(70% 60% at 50% 40%, #000 0%, transparent 100%);
+  mask-image: radial-gradient(70% 60% at 50% 40%, #000 0%, transparent 100%);
+}
+
+/* ---------------------------------------------------------------------------
+   4.5 光的抵达
+   「阳光撒向每个角落」是这个机构的核心隐喻，所以它不能只出现在首屏的那轮
+   太阳上 —— 得让每个区块都留下被照到的痕迹：一道从右上斜射进来的光，
+   落在区块的角上。极淡，单独看几乎察觉不到，但整页滚下来会形成连续的
+   「光在走」的感觉。
+   --------------------------------------------------------------------------- */
+@utility sunfall {
+  position: relative;
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: linear-gradient(
+      156deg,
+      var(--sunfall-color, oklch(0.86 0.13 72 / 0.16)) 0%,
+      transparent var(--sunfall-reach, 38%)
+    );
+  }
+
+  /* 内容必须浮在光之上，否则会被这层盖住 */
+  & > * {
+    position: relative;
+  }
+}
+
+/* 光落在卡片一角：hover 时光斑扩散，读作「被照到」 */
+@utility lit-corner {
+  position: relative;
+  overflow: hidden;
+
+  &::after {
+    content: "";
+    position: absolute;
+    inset-block-start: 0;
+    inset-inline-end: 0;
+    width: 62%;
+    height: 62%;
+    pointer-events: none;
+    background: radial-gradient(
+      circle at 100% 0%,
+      var(--lit-color, oklch(0.82 0.14 68 / 0.28)) 0%,
+      transparent 68%
+    );
+    opacity: 0.65;
+    transition: opacity var(--duration-slow) var(--ease-out-soft);
+  }
+
+  &:hover::after {
+    opacity: 1;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   4.8 纸
+   卡片、面板的边缘走手绘毛边，而不是标准的 1px 描边 —— 首屏既然是画出来的，
+   下面的容器就不该是用尺子量出来的。
+
+   实现要点：描边放在**独立的伪元素**上再上滤墨。直接给卡片本体加
+   feDisplacementMap 会把里面的文字一起揉糊，这是这类效果最常见的翻车方式。
+   --------------------------------------------------------------------------- */
+@utility paper-edge {
+  position: relative;
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    border: 1.5px solid var(--paper-edge-color, oklch(0.66 0.1 48 / 0.34));
+    filter: url(#yy-paper-edge);
+    pointer-events: none;
+  }
+
+  &:hover::before {
+    border-color: var(--paper-edge-hover, oklch(0.62 0.14 46 / 0.55));
+  }
+}
+
+/* 纸面：半透的纸，替代「很科技」的玻璃。
+   仍保留极轻的模糊，让背后的画透上来一点，但主体是纸而不是镜面。 */
+@utility paper-surface {
+  position: relative;
+  isolation: isolate;
+  background-color: var(--paper-tint, oklch(0.995 0.008 84 / 0.9));
+  box-shadow:
+    inset 0 1px 0 0 oklch(1 0 0 / 0.72),
+    0 10px 30px oklch(0.45 0.1 42 / 0.12),
+    0 2px 6px oklch(0.45 0.1 42 / 0.07);
+
+  @supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+    background-color: var(--paper-tint-translucent, oklch(0.995 0.008 84 / 0.82));
+    -webkit-backdrop-filter: blur(7px) saturate(122%);
+    backdrop-filter: blur(7px) saturate(122%);
+  }
+
+  /* 纸的纤维纹理 */
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    opacity: var(--paper-grain, 0.06);
+    mix-blend-mode: multiply;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='150'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='4'/%3E%3C/filter%3E%3Crect width='150' height='150' filter='url(%23f)'/%3E%3C/svg%3E");
+  }
+}
+
+/* 蜡笔图标：给线性图标一点手抖，别让它看起来是矢量软件里拉出来的 */
+@utility crayon {
+  filter: url(#yy-crayon);
+}
+
+/* 一笔扫出来的短横线 */
+@utility brush-line {
+  filter: url(#yy-stroke);
+}
+
+/* ---------------------------------------------------------------------------
+   4.9 首屏入场编排
+   一个有节奏的进场序列，比满页零散的 hover 效果更能让人记住 —— 后者反而是
+   AI 生成感的来源之一。
+
+   顺序是设计过的，不是随便错开：画先亮起来（世界在那儿），然后是题引、
+   标题、副标题、按钮（我们开始说话），最后数据条从底部升上来（证据）。
+
+   全部只动 opacity 与 transform，不碰 filter/blur —— 后者每帧重算，
+   会让首屏动画在中低端机上直接掉帧。
+   --------------------------------------------------------------------------- */
+@utility stage {
+  & > * {
+    animation: stage-rise 0.85s var(--ease-out-soft) both;
+  }
+  & > *:nth-child(1) { animation-delay: 0.05s; }
+  & > *:nth-child(2) { animation-delay: 0.18s; }
+  & > *:nth-child(3) { animation-delay: 0.3s; }
+  & > *:nth-child(4) { animation-delay: 0.42s; }
+  & > *:nth-child(5) { animation-delay: 0.54s; }
+}
+
+@keyframes stage-rise {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* 画面本身：更慢、更沉，先于文字到位 */
+@utility stage-canvas {
+  animation: canvas-in 1.4s var(--ease-out-soft) both;
+}
+
+@keyframes canvas-in {
+  from {
+    opacity: 0;
+    transform: scale(1.04);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* 数据条：最后从底部升起 */
+@utility stage-last {
+  animation: stage-rise 0.9s var(--ease-out-soft) 0.72s both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stage > *,
+  .stage-canvas,
+  .stage-last {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   5. 辉光：元素背后一枚同形状的模糊副本
+   比 box-shadow 更像真实发光，因为它带颜色扩散。
+   --------------------------------------------------------------------------- */
+@utility glow-warm {
+  position: relative;
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 6%;
+    border-radius: inherit;
+    background: var(--glow-color, oklch(0.75 0.17 58));
+    filter: blur(var(--glow-blur, 34px));
+    opacity: var(--glow-opacity, 0.5);
+    z-index: -1;
+    pointer-events: none;
+    transition: opacity var(--duration-slow) var(--ease-out-soft);
+  }
+
+  &:hover::before {
+    opacity: calc(var(--glow-opacity, 0.5) + 0.22);
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   6. 噪点：压住大面积渐变必然出现的色带
+   --------------------------------------------------------------------------- */
+@utility grain {
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: var(--grain-opacity, 0.045);
+    mix-blend-mode: multiply;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   降级：动效偏好与省电模式
+   注意 ring-spin 动的是 --angle 而不是 transform，通配符规则压不住它的
+   视觉效果，必须显式停掉。
+   --------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  .aurora-blob,
+  .ring-spin::before,
+  .sheen::after {
+    animation: none !important;
+  }
+
+  .ring-spin::before {
+    background: var(--ring-color, oklch(0.72 0.18 55));
+    opacity: 0.35;
+  }
+}
+
+/* 高对比 / 强制颜色模式下，手绘毛边与手抖一律关掉 ——
+   这些是氛围，不能牺牲需要它们的人的可读性。 */
+@media (prefers-contrast: more), (forced-colors: active) {
+  .paper-edge::before {
+    filter: none;
+    border-color: currentColor;
+  }
+
+  .crayon,
+  .brush-line {
+    filter: none;
+  }
+
+  .paper-surface {
+    background-color: var(--surface) !important;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+
+  .paper-surface::after {
+    display: none;
+  }
+}

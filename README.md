@@ -1,34 +1,126 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 艳阳基金会官方网站
 
-## Getting Started
+Next.js 16 + Tailwind CSS 4，中文优先，视觉方向为「暖阳浅底 + Apple 液态玻璃」。
 
-First, run the development server:
+- 设计与技术决策的依据：[`docs/RESEARCH.md`](docs/RESEARCH.md)
+- **需要基金会提供的材料清单：[`docs/CONTENT-CHECKLIST.md`](docs/CONTENT-CHECKLIST.md)** ← 内容负责人看这份
+
+---
+
+## 本地开发
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+pnpm install
+pnpm dev            # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+其它命令：
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+pnpm check:content  # 列出还有哪些事实性内容没填
+pnpm font:build     # 重新生成中文标题字体子集（改了文案后跑一次）
+pnpm lint
+pnpm build          # 生产构建，占位内容没填完会主动失败
+pnpm build:preview  # 跳过占位检查的构建，用于内容齐备前的预览部署
+```
 
-## Learn More
+---
 
-To learn more about Next.js, take a look at the following resources:
+## 改内容不用碰代码
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+所有文案集中在 `content/` 目录，改这里就行：
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+| 文件 | 内容 |
+|---|---|
+| `content/site.ts` | 机构名称、法定信息、联系方式、备案号、**是否有公开募捐资格** |
+| `content/home.ts` | 首页各区块文案与数据 |
+| `content/pages.ts` | 各栏目页的标题、引导语、待填说明 |
+| `content/nav.ts` | 导航结构 |
 
-## Deploy on Vercel
+在 GitHub 网页上直接编辑这些文件并提交，Vercel 会自动重新部署。
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### 两种占位标记的区别
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+| 标记 | 含义 | 站内表现 | 阻塞上线 |
+|---|---|---|---|
+| `TODO_FOUNDATION_INPUT:...` | 事实性内容，只能由基金会提供 | 黄色高亮块 | **是** |
+| `DRAFT:...`（由 `draft()` 生成） | 起草的表述性文案，可直接改 | 正常显示，开发时有虚线 | 否 |
+
+这个区分是刻意的：在慈善机构官网上编造数字、资质或合作方，触及《慈善法》第 111 条的虚假宣传，最重可吊销登记证书。详见内容清单。
+
+### 改完文案记得跑一次字体
+
+标题字体是按站内**实际用字**做的子集。加了新的标题文案后：
+
+```bash
+pnpm font:build
+```
+
+`pnpm build` 会自动跑这一步，所以只在本地 dev 时需要手动执行。
+
+---
+
+## 项目结构
+
+```
+content/               所有文案与配置（非技术同事改这里）
+docs/                  调研记录与内容清单
+scripts/
+  subset-fonts.mjs     中文字体子集化
+  check-placeholders.mjs  上线守卫：拦截未替换的占位内容
+assets/                字体源文件与字表（不进构建产物）
+src/
+  app/                 路由（App Router）
+    globals.css        设计系统：色板、排版、玻璃材质、无障碍降级
+    fonts.ts           标题字体配置
+  components/
+    ui/                按钮、区块容器等基础件
+    site-header.tsx    玻璃导航（全站唯一常驻的玻璃元素）
+    site-footer.tsx    合规页脚
+    page-shell.tsx     栏目页骨架
+    fact.tsx           内容渲染器（区分事实/起草文案）
+    sun-field.tsx      首屏暖阳光场（纯 CSS，零图片）
+    brand-mark.tsx     临时标识 ← 拿到正式 VI 后只改这一个文件
+```
+
+---
+
+## 部署：GitHub → Vercel → 域名
+
+### 1. 推到 GitHub 私有库
+
+```bash
+git add -A
+git commit -m "初始化艳阳基金会官网"
+gh repo create yanyang-foundation --private --source=. --remote=origin --push
+```
+
+### 2. 接入 Vercel
+
+1. 登录 <https://vercel.com>，New Project → Import Git Repository
+2. 选中刚创建的仓库，框架会自动识别为 Next.js，**不需要改任何构建配置**
+3. 首次部署前把构建命令临时改为 `pnpm build:preview`（内容未齐时 `pnpm build` 会主动失败），内容填完后改回 `pnpm build`
+
+### 3. 绑定域名
+
+在 Vercel 项目的 Settings → Domains 添加域名，它会给出需要配置的 DNS 记录，形如：
+
+| 类型 | 名称 | 值 |
+|---|---|---|
+| A | `@` | Vercel 给出的 IP |
+| CNAME | `www` | `cname.vercel-dns.com` |
+
+到域名注册商后台的「DNS 解析」里添加这两条，等 10 分钟到几小时生效，HTTPS 证书 Vercel 自动配。
+
+**两个注意事项：**
+
+- 若面向中国大陆访问，把 CNAME 指向 `cname-china.vercel-dns.com`（Vercel 的中国优化入口，零成本）
+- **不要用 .cn 域名指向 Vercel** —— .cn 未备案会被停止解析，而 Vercel 无法办理 ICP 备案
+
+### 4. 上线前
+
+- [ ] `content/site.ts` 里的 `url` 填成正式域名（metadata、sitemap、OG 图都依赖它）
+- [ ] `pnpm build` 通过（即所有事实性内容已填）
+- [ ] 提交 sitemap 到 Google Search Console 与百度搜索资源平台
+- [ ] 网站开通后 30 日内办理公安联网备案（如已 ICP 备案）
+- [ ] 核对官网信息与「慈善中国」平台公示内容一致

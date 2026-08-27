@@ -75,6 +75,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           跳转到主要内容
         </a>
         <PaperFilters />
+        {/* 全站环境光场：暖阳光晕 + 一抹冷色神经/信号光，科幻与阳光的底色。
+            纯装饰、不可聚焦、不拦截事件，置于所有内容之下。 */}
+        <div aria-hidden className="tech-field" />
         <SiteHeader />
         <main id="main" tabIndex={-1}>
           {children}

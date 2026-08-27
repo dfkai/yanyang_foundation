@@ -72,6 +72,16 @@ export default function Home() {
             之后随滚动极缓慢地继续旋转。烘在位图里就动不了了。 */}
         <HeroSun className="top-[-9%] right-[-5%] w-[clamp(13rem,44vw,44rem)] [aspect-ratio:1]" />
 
+        {/* 信号光场：暖阳光晕与冷色神经/声波信号光融合，
+            为人工耳蜗（声波）与脑机接口（神经信号）埋下视觉伏笔。
+            两层嵌套避免 background 简写与 background-image 互相覆盖。 */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 -z-10 aurora-tech"
+        >
+          <div className="absolute inset-0 neural-grid" />
+        </div>
+
         <Container className="flex flex-1 items-center">
           <StageText className="relative max-w-2xl py-24 sm:py-28">
             {/* 标题逐行落下，每行自带 blur→0，比单纯位移更像「浮出来」 */}

@@ -42,6 +42,14 @@
   --color-sand-900: oklch(0.259 0.008 40);
   --color-sand-950: oklch(0.176 0.007 38);
 
+  /* --- 信号色：冷调「神经 / 声波」光，呼应人工耳蜗与脑机接口 ---------------
+     仅用于装饰（辉光、光环、细线、网格），绝不承载文字；
+     暖阳仍是主色，信号光只作一抹冷调点缀，避免整体变冷。                 */
+  --color-signal-300: oklch(0.86 0.10 200);
+  --color-signal-400: oklch(0.78 0.13 205);
+  --color-signal-500: oklch(0.70 0.15 210);
+  --color-signal-600: oklch(0.62 0.15 215);
+
   /* --- 字体 ---------------------------------------------------------------
      正文走系统字体栈（0 字节）：苹方 / 微软雅黑 / 思源黑体都是高质量黑体。
      只有展示级标题用自托管的 Noto Sans SC 700 子集（约 139KB）。
@@ -586,8 +594,8 @@
     background: linear-gradient(
       160deg,
       var(--glass-edge-warm) 0%,
-      transparent 38%,
-      transparent 62%,
+      transparent 30%,
+      var(--glass-edge-signal, oklch(0.70 0.15 210 / 0.22)) 60%,
       oklch(1 0 0 / 0.18) 100%
     );
     -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
@@ -871,6 +879,13 @@
   --gradient-sun-line:
     linear-gradient(96deg, oklch(0.72 0.178 62) 0%, oklch(0.62 0.178 46) 52%,
       oklch(0.56 0.168 38) 100%);
+
+  /* 暖阳光晕 + 冷色信号光融合 —— 「科幻与阳光」的核心背景。
+     右上暖橙（艳阳）、左下冷青（神经/声波信号），中间一缕暖白过渡。 */
+  --gradient-aurora-tech:
+    radial-gradient(58% 52% at 82% 10%, oklch(0.72 0.17 62 / 0.5) 0%, transparent 60%),
+    radial-gradient(52% 48% at 10% 92%, oklch(0.70 0.15 210 / 0.42) 0%, transparent 62%),
+    radial-gradient(42% 40% at 50% 48%, oklch(0.86 0.13 82 / 0.22) 0%, transparent 70%);
 }
 
 /* 满幅日光背景。整块区域用，文字一律走白。 */

@@ -386,6 +386,81 @@
 }
 
 /* ---------------------------------------------------------------------------
+   5.5 信号光场：暖阳光晕与冷色「神经 / 声波」信号光融合
+   为人工耳蜗（声波）与脑机接口（神经信号）埋下视觉伏笔。
+   仅作装饰，绝不动滤镜本身；用径向遮罩收边，保持通透不抢戏。
+   --------------------------------------------------------------------------- */
+@utility aurora-tech {
+  background: var(--gradient-aurora-tech);
+}
+
+/* 神经 / 信号纹理：同心声波环 + 点阵，呼应声音与神经信号的扩散。
+   配径向遮罩淡出，只点在区块一角，不铺满、不抢戏。 */
+@utility neural-grid {
+  background-image:
+    repeating-radial-gradient(
+      circle at var(--neural-origin, 72% 26%),
+      transparent 0 30px,
+      var(--neural-color, oklch(0.70 0.15 210 / 0.12)) 30px 31px
+    ),
+    radial-gradient(
+      circle at 1px 1px,
+      var(--neural-dot, oklch(0.70 0.15 210 / 0.10)) 1px,
+      transparent 0
+    );
+  background-size: auto, var(--neural-dot-size, 24px) var(--neural-dot-size, 24px);
+  -webkit-mask-image: radial-gradient(
+    var(--neural-fade, 75% 70%) at var(--neural-origin, 72% 26%),
+    #000 0%,
+    transparent 100%
+  );
+  mask-image: radial-gradient(
+    var(--neural-fade, 75% 70%) at var(--neural-origin, 72% 26%),
+    #000 0%,
+    transparent 100%
+  );
+}
+
+/* 冷色辉光：与 glow-warm 同源，换一抹信号光 */
+@utility glow-signal {
+  position: relative;
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 6%;
+    border-radius: inherit;
+    background: var(--glow-signal-color, oklch(0.70 0.15 210));
+    filter: blur(var(--glow-blur, 34px));
+    opacity: var(--glow-opacity, 0.5);
+    z-index: -1;
+    pointer-events: none;
+    transition: opacity var(--duration-slow) var(--ease-out-soft);
+  }
+
+  &:hover::before {
+    opacity: calc(var(--glow-opacity, 0.5) + 0.22);
+  }
+}
+
+/* 全站环境光场：极淡的神经信号纹理 + 暖冷双色光晕，
+   只在留白与透明区块透出，不干扰正文阅读。 */
+@utility tech-field {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image:
+    repeating-radial-gradient(
+      circle at 86% 6%,
+      transparent 0 34px,
+      oklch(0.70 0.15 210 / 0.05) 34px 35px
+    ),
+    radial-gradient(60% 50% at 88% 4%, oklch(0.72 0.17 62 / 0.26) 0%, transparent 60%),
+    radial-gradient(50% 46% at 3% 97%, oklch(0.70 0.15 210 / 0.20) 0%, transparent 62%);
+}
+
+/* ---------------------------------------------------------------------------
    6. 噪点：压住大面积渐变必然出现的色带
    --------------------------------------------------------------------------- */
 @utility grain {

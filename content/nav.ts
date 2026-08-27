@@ -13,8 +13,8 @@ export type NavItem = {
  * 标杆站的一级导航普遍在 3–8 项（盖茨基金会 3 项、维基媒体 4 项、壹基金 6 项、
  * 中国乡村发展基金会 8 项），超过 8 项在移动端会崩。
  *
- * 「信息公开」必须占一级导航位置 —— 三家中国大陆标杆基金会全部如此，
- * 这是中国大陆慈善组织官网与欧美站最大的信息架构差异。
+ * 注：原设计将「信息公开」固定放在一级导航（中国大陆标杆基金会惯例、合规可达性考虑），
+ * 但当前按需求已从一级导航移除；其页面仍保留，可从页脚「信息公开」组进入。
  */
 export const primaryNav: NavItem[] = [
   {
@@ -37,19 +37,6 @@ export const primaryNav: NavItem[] = [
     children: [
       { label: "影响力总览", href: "/impact" },
       { label: "一线故事", href: "/impact/stories" },
-    ],
-  },
-  {
-    label: "信息公开",
-    href: "/disclosure",
-    children: [
-      { label: "公开总览", href: "/disclosure" },
-      { label: "章程与内部制度", href: "/disclosure/charter" },
-      { label: "年度工作报告", href: "/disclosure/annual-report" },
-      { label: "财务与审计报告", href: "/disclosure/financial" },
-      { label: "慈善项目信息", href: "/disclosure/projects" },
-      { label: "重要关联方交易", href: "/disclosure/related-party" },
-      { label: "投诉与举报", href: "/disclosure/complaints" },
     ],
   },
   { label: "新闻动态", href: "/news" },

@@ -401,11 +401,11 @@
     repeating-radial-gradient(
       circle at var(--neural-origin, 72% 26%),
       transparent 0 30px,
-      var(--neural-color, oklch(0.70 0.15 210 / 0.12)) 30px 31px
+      var(--neural-color, oklch(0.70 0.15 285 / 0.12)) 30px 31px
     ),
     radial-gradient(
       circle at 1px 1px,
-      var(--neural-dot, oklch(0.70 0.15 210 / 0.10)) 1px,
+      var(--neural-dot, oklch(0.70 0.15 285 / 0.10)) 1px,
       transparent 0
     );
   background-size: auto, var(--neural-dot-size, 24px) var(--neural-dot-size, 24px);
@@ -430,7 +430,7 @@
     position: absolute;
     inset: 6%;
     border-radius: inherit;
-    background: var(--glow-signal-color, oklch(0.70 0.15 210));
+    background: var(--glow-signal-color, oklch(0.70 0.15 285));
     filter: blur(var(--glow-blur, 34px));
     opacity: var(--glow-opacity, 0.5);
     z-index: -1;
@@ -454,10 +454,10 @@
     repeating-radial-gradient(
       circle at 86% 6%,
       transparent 0 34px,
-      oklch(0.70 0.15 210 / 0.05) 34px 35px
+      oklch(0.70 0.15 285 / 0.05) 34px 35px
     ),
     radial-gradient(60% 50% at 88% 4%, oklch(0.72 0.17 62 / 0.26) 0%, transparent 60%),
-    radial-gradient(50% 46% at 3% 97%, oklch(0.70 0.15 210 / 0.20) 0%, transparent 62%);
+    radial-gradient(50% 46% at 3% 97%, oklch(0.70 0.15 285 / 0.20) 0%, transparent 62%);
 }
 
 /* ---------------------------------------------------------------------------
